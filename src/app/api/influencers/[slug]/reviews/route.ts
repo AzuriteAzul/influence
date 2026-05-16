@@ -29,7 +29,7 @@ export async function GET(
 
   let query = supabase
     .from("reviews")
-    .select("*, profiles(display_name, username, avatar_url)", { count: "exact" })
+    .select("*", { count: "exact" })
     .eq("influencer_id", influencer.id);
 
   switch (sort) {
@@ -47,11 +47,31 @@ export async function GET(
 
   query = query.range(offset, offset + limit - 1);
 
-  const { data, error, count } = await query;
+  const { data: reviews, error, count } = await query;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // Batch fetch profiles for review authors
+  const userIds = [...new Set((reviews ?? []).map((r) => r.user_id))];
+  const profilesMap: Record<string, { display_name: string; username: string; avatar_url: string }> = {};
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, display_name, username, avatar_url")
+      .in("id", userIds);
+
+    (profiles ?? []).forEach((p) => {
+      profilesMap[p.id] = p;
+    });
+  }
+
+  const data = (reviews ?? []).map((review) => ({
+    ...review,
+    profiles: profilesMap[review.user_id] || null,
+  }));
 
   return NextResponse.json({
     data,

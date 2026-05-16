@@ -60,16 +60,6 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: "Authentication required" }, { status: 401 });
-  }
-
   const body = await request.json();
   const parsed = influencerSchema.safeParse(body);
 
@@ -83,9 +73,21 @@ export async function POST(request: NextRequest) {
   const { name } = parsed.data;
   const socialLink = body.social_link;
 
+  // Optionally record the submitter if logged in
+  let submittedBy: string | null = null;
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) submittedBy = user.id;
+  } catch {
+    // Not logged in — fine
+  }
+
   const slug = generateSlug(name);
 
-  const { data: existing } = await supabase
+  const adminClient = createAdminClient();
+
+  const { data: existing } = await adminClient
     .from("influencers")
     .select("id")
     .eq("slug", slug)
@@ -93,7 +95,6 @@ export async function POST(request: NextRequest) {
 
   const finalSlug = existing ? `${slug}-${Date.now().toString(36)}` : slug;
 
-  const adminClient = createAdminClient();
   const { data, error } = await adminClient
     .from("influencers")
     .insert({
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       social_links: socialLink ? { link: socialLink } : {},
       website: null,
       status: "pending",
-      submitted_by: user.id,
+      submitted_by: submittedBy,
     })
     .select()
     .single();

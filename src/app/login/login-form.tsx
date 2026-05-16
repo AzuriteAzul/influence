@@ -1,57 +1,50 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Star, Mail } from "lucide-react";
+import { Star } from "lucide-react";
+import Link from "next/link";
 
 export function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const isSignup = searchParams.get("signup") === "true";
   const redirect = searchParams.get("redirect") ?? "/dashboard";
 
-  const handleMagicLink = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirect)}`,
-      },
-    });
 
-    if (error) {
-      setError(error.message);
+    if (isSignup) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        window.location.href = redirect;
+      }
     } else {
-      setSent(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      } else {
+        window.location.href = redirect;
+      }
     }
-    setLoading(false);
   };
-
-  if (sent) {
-    return (
-      <div className="flex min-h-[80vh] items-center justify-center px-4">
-        <div className="w-full max-w-md text-center space-y-4">
-          <Mail className="mx-auto h-12 w-12 text-indigo-500" />
-          <h1 className="text-2xl font-bold">Check your email</h1>
-          <p className="text-muted-foreground">
-            We sent a magic link to <strong>{email}</strong>. Click the link to sign in.
-          </p>
-          <Button variant="outline" onClick={() => setSent(false)} className="mt-4">
-            Use a different email
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center px-4">
@@ -63,16 +56,20 @@ export function LoginForm() {
               Reputize
             </span>
           </div>
-          <h1 className="text-xl font-semibold">Welcome back</h1>
+          <h1 className="text-xl font-semibold">
+            {isSignup ? "Create an account" : "Sign in"}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Sign in to write reviews and manage your activity.
+            {isSignup
+              ? "Join to write reviews and submit influencers."
+              : "Sign in to write reviews and manage your submissions."}
           </p>
         </div>
 
-        <form onSubmit={handleMagicLink} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
-              Email address
+              Email
             </label>
             <input
               id="email"
@@ -85,12 +82,52 @@ export function LoginForm() {
             />
           </div>
 
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium mb-1">
+              Password
+            </label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min 6 characters"
+              required
+              minLength={6}
+              className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+            />
+          </div>
+
           {error && <p className="text-sm text-destructive">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Sending link..." : "Send magic link"}
+            {loading
+              ? isSignup
+                ? "Creating account..."
+                : "Signing in..."
+              : isSignup
+                ? "Create account"
+                : "Sign in"}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-muted-foreground">
+          {isSignup ? (
+            <>
+              Already have an account?{" "}
+              <Link href="/login" className="text-indigo-500 hover:underline">
+                Sign in
+              </Link>
+            </>
+          ) : (
+            <>
+              Don&apos;t have an account?{" "}
+              <Link href="/login?signup=true" className="text-indigo-500 hover:underline">
+                Sign up
+              </Link>
+            </>
+          )}
+        </p>
       </div>
     </div>
   );
