@@ -7,7 +7,7 @@ export interface Influencer {
   profile_image_url: string | null;
   social_links: Record<string, string>;
   website: string | null;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "generating" | "pending_review" | "approved" | "rejected";
   rejection_reason: string | null;
   submitted_by: string | null;
   claimed_by: string | null;

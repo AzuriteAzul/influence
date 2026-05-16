@@ -80,12 +80,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { name, category, bio, profile_image_url, social_links, website } =
-    parsed.data;
+  const { name } = parsed.data;
+  const socialLink = body.social_link;
 
   const slug = generateSlug(name);
 
-  // Check slug uniqueness
   const { data: existing } = await supabase
     .from("influencers")
     .select("id")
@@ -100,11 +99,11 @@ export async function POST(request: NextRequest) {
     .insert({
       name,
       slug: finalSlug,
-      category,
-      bio: bio ?? null,
-      profile_image_url: profile_image_url || null,
-      social_links: social_links ?? {},
-      website: website || null,
+      category: "pending",
+      bio: null,
+      profile_image_url: null,
+      social_links: socialLink ? { link: socialLink } : {},
+      website: null,
       status: "pending",
       submitted_by: user.id,
     })

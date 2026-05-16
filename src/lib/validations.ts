@@ -2,16 +2,12 @@ import { z } from "zod";
 
 export const influencerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  category: z.string().min(1, "Category is required"),
-  bio: z.string().min(10, "Bio must be at least 10 characters").max(1000).optional(),
-  profile_image_url: z.string().url("Invalid image URL").optional().or(z.literal("")),
-  social_links: z.object({
-    instagram: z.string().optional().or(z.literal("")),
-    youtube: z.string().optional().or(z.literal("")),
-    tiktok: z.string().optional().or(z.literal("")),
-    twitter: z.string().optional().or(z.literal("")),
-  }).optional(),
-  website: z.string().url("Invalid website URL").optional().or(z.literal("")),
+  social_link: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  category: z.string().optional(),
+  bio: z.string().optional(),
+  profile_image_url: z.string().optional(),
+  social_links: z.record(z.string(), z.string()).optional(),
+  website: z.string().optional(),
 });
 
 export const reviewSchema = z.object({
