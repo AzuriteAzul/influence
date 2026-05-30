@@ -6,6 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Star, Flag, Trash2 } from "lucide-react";
 import type { Review } from "@/types";
 
+type ProfileData = { display_name?: string | null; username?: string | null; avatar_url?: string | null };
+
+function getAuthorName(review: Review): string {
+  const profile = review.profiles as ProfileData | undefined;
+  return profile?.username || profile?.display_name || "Anonymous";
+}
+
 export default function AdminReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,6 +88,7 @@ export default function AdminReviewsPage() {
                     </div>
                     <h4 className="font-medium">{review.title}</h4>
                     <p className="text-sm text-muted-foreground mt-1">{review.body}</p>
+                    <p className="text-xs text-muted-foreground mt-1">by {getAuthorName(review)}</p>
                   </div>
                   <div className="flex items-center gap-2 ml-4">
                     <Button

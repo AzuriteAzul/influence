@@ -6,7 +6,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { SearchBar } from "@/components/layout/SearchBar";
-import { Star } from "lucide-react";
+import { Zap } from "lucide-react";
+import { SITE_NAME } from "@/lib/constants";
 import type { User } from "@supabase/supabase-js";
 
 export function Navbar() {
@@ -41,9 +42,9 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <Star className="h-6 w-6 text-indigo-500 fill-indigo-500" />
+            <Zap className="h-6 w-6 text-indigo-500 fill-indigo-500" />
             <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
-              Reputize
+              {SITE_NAME}
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">

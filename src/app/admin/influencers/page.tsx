@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, X, Sparkles, Loader2 } from "lucide-react";
+import { Check, X, Sparkles, Loader2, Trash2 } from "lucide-react";
 import type { Influencer } from "@/types";
 
 export default function AdminInfluencersPage() {
@@ -56,6 +56,12 @@ export default function AdminInfluencersPage() {
       body: JSON.stringify({ reason }),
     });
     fetchInfluencers();
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Permanently delete "${name}" and all their reviews?`)) return;
+    const res = await fetch(`/api/admin/influencers/${id}`, { method: "DELETE" });
+    if (res.ok) fetchInfluencers();
   };
 
   const statusLabel = (s: string) => {
@@ -264,6 +270,15 @@ export default function AdminInfluencersPage() {
                           </Button>
                         </>
                       )}
+
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-destructive"
+                        onClick={() => handleDelete(inf.id, inf.name)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </CardContent>

@@ -61,11 +61,3 @@ export interface PaginatedResponse<T> {
 }
 
 export type SortOption = "highest_rated" | "most_reviewed" | "newest";
-
-export interface InfluencerFilters {
-  search?: string;
-  category?: string;
-  sort?: SortOption;
-  page?: number;
-  limit?: number;
-}

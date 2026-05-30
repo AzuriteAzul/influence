@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { Zap } from "lucide-react";
+import { SITE_NAME } from "@/lib/constants";
 
 export function Footer() {
   return (
@@ -8,9 +9,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
             <div className="flex items-center gap-2 font-bold text-lg">
-              <Star className="h-5 w-5 text-indigo-500 fill-indigo-500" />
+              <Zap className="h-5 w-5 text-indigo-500 fill-indigo-500" />
               <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
-                Reputize
+                {SITE_NAME}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -46,7 +47,7 @@ export function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-          &copy; {new Date().getFullYear()} Reputize. All rights reserved.
+          &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
         </div>
       </div>
     </footer>

@@ -14,7 +14,7 @@ export function ReviewCard({ review }: ReviewCardProps) {
     | { display_name?: string; username?: string; avatar_url?: string }
     | undefined;
 
-  const displayName = profile?.display_name || profile?.username || "Anonymous";
+  const displayName = profile?.username || profile?.display_name || "Anonymous";
 
   return (
     <div className="border rounded-lg p-5 space-y-3">

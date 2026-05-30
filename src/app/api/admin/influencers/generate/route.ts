@@ -9,13 +9,18 @@ interface TavilyResult {
 
 interface TavilySearchResponse {
   results?: TavilyResult[];
-  images?: { url: string; description?: string }[];
+  images?: string[];
   answer?: string;
+}
+
+interface DeepSeekMessage {
+  role: "system" | "user";
+  content: string;
 }
 
 async function tavilySearch(query: string, includeImages = false): Promise<TavilySearchResponse> {
   const tavilyKey = process.env.TAVILY_API_KEY;
-  if (!tavilyKey) return { results: [] };
+  if (!tavilyKey) return { results: [], images: [] };
 
   try {
     const res = await fetch("https://api.tavily.com/search", {
@@ -30,16 +35,11 @@ async function tavilySearch(query: string, includeImages = false): Promise<Tavil
         max_results: 5,
       }),
     });
-    if (!res.ok) return { results: [] };
+    if (!res.ok) return { results: [], images: [] };
     return await res.json();
   } catch {
-    return { results: [] };
+    return { results: [], images: [] };
   }
-}
-
-interface DeepSeekMessage {
-  role: "system" | "user";
-  content: string;
 }
 
 async function callDeepSeek(messages: DeepSeekMessage[]) {
@@ -68,6 +68,10 @@ function extractJSON(content: string): object | null {
   return null;
 }
 
+function dedupeUrls(list: string[]): string[] {
+  return [...new Set(list)];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { influencerId } = await request.json();
@@ -93,25 +97,30 @@ export async function POST(request: NextRequest) {
 
     const name = influencer.name;
 
-    // Step 1: Search the web — multiple queries for better coverage
+    // Step 1: Search the web — all include images, plus a dedicated image query
     const [profileSearch, socialSearch, imageSearch] = await Promise.all([
-      tavilySearch(`"${name}" influencer about bio content creator what they do`),
-      tavilySearch(`"${name}" instagram youtube tiktok twitter social media`),
-      tavilySearch(`"${name}" (influencer OR content creator)`, true),
+      tavilySearch(`"${name}" influencer bio content creator what they do`, true),
+      tavilySearch(`"${name}" instagram youtube tiktok twitter social media`, true),
+      tavilySearch(`"${name}" photo face profile picture`, true),
     ]);
 
     const totalResults = [
       ...(profileSearch.results ?? []),
       ...(socialSearch.results ?? []),
     ];
-    const allImages = imageSearch.images ?? [];
+
+    const allImages = dedupeUrls([
+      ...(profileSearch.images ?? []),
+      ...(socialSearch.images ?? []),
+      ...(imageSearch.images ?? []),
+    ]);
+
     const aiAnswer = profileSearch.answer ?? socialSearch.answer ?? "";
 
     console.log(
       `Tavily: ${totalResults.length} results, ${allImages.length} images for "${name}"`
     );
 
-    // Format search results for the LLM
     const webData = totalResults
       .slice(0, 8)
       .map(
@@ -122,15 +131,17 @@ export async function POST(request: NextRequest) {
 
     const imageUrls = allImages
       .slice(0, 5)
-      .map((img, i) => `[IMG${i + 1}] ${img.url} — ${img.description ?? "no description"}`)
+      .map((url, i) => `[IMG${i + 1}] ${url}`)
       .join("\n");
 
     // Step 2: Generate with DeepSeek using real data
     const systemPrompt =
-      "You create accurate influencer profile pages. You are given REAL web search results. " +
-      "You MUST ONLY use information found in the provided search results. " +
+      "You create accurate influencer profile pages from real web search results. " +
+      "Use ONLY information found in the provided search results. " +
       "Extract social media URLs exactly as they appear in the results. " +
-      "Pick the most professional-looking profile image from the image list. " +
+      "Pick the most professional-looking profile image URL from the image list. " +
+      "Never include age, follower/subscriber counts, or numeric statistics that change over time. " +
+      "Focus on what the creator does, their content style, and their niche. " +
       "Respond with ONLY valid JSON, no markdown, no code fences.";
 
     const userPrompt = `Create a profile for "${name}".
@@ -142,11 +153,11 @@ ${webData || "No results found."}
 IMAGE RESULTS:
 ${imageUrls || "No images found."}
 
-Return ONLY a JSON object:
+Return a JSON object:
 {
   "name": "${name}",
   "category": "beauty|gaming|fitness|tech|fashion|food|travel|music|comedy|lifestyle|finance|education|sports|parenting|diy",
-  "bio": "2-3 factual sentences about their content and why people follow them",
+  "bio": "2-3 timeless sentences about who they are, what kind of content they create, and their niche. Never include age, follower counts, subscriber numbers, or numeric statistics that change over time.",
   "social_links": {
     "instagram": "full URL from results or ''",
     "youtube": "full URL from results or ''",
@@ -154,7 +165,7 @@ Return ONLY a JSON object:
     "twitter": "full URL from results or ''"
   },
   "website": "official site URL or ''",
-  "profile_image_url": "best image URL from the image results or ''"
+  "profile_image_url": "best image URL from the image list or ''"
 }`;
 
     const content = await callDeepSeek([

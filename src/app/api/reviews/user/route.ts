@@ -21,5 +21,25 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ data: reviews });
+  // Batch fetch profiles for review authors
+  const userIds = [...new Set((reviews ?? []).map((r) => r.user_id))];
+  const profilesMap: Record<string, { id: string; display_name: string | null; username: string | null; avatar_url: string | null }> = {};
+
+  if (userIds.length > 0) {
+    const { data: profiles } = await adminClient
+      .from("profiles")
+      .select("id, display_name, username, avatar_url")
+      .in("id", userIds);
+
+    (profiles ?? []).forEach((p) => {
+      profilesMap[p.id] = p;
+    });
+  }
+
+  const data = (reviews ?? []).map((review) => ({
+    ...review,
+    profiles: profilesMap[review.user_id] || null,
+  }));
+
+  return NextResponse.json({ data });
 }

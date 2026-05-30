@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Star, Search, TrendingUp, Users, Shield, ArrowRight } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils";
+import { SITE_NAME } from "@/lib/constants";
 import type { Influencer, Category } from "@/types";
 
 export default function HomePage() {
@@ -13,7 +16,7 @@ export default function HomePage() {
   const [trending, setTrending] = useState<Influencer[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [stats, setStats] = useState({ influencers: 0, reviews: 0, categories: 0 });
+  const [stats, setStats] = useState({ influencers: 0, categories: 0 });
 
   useEffect(() => {
     fetch("/api/influencers?sort=most_reviewed&limit=6")
@@ -66,7 +69,7 @@ export default function HomePage() {
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border bg-background/80 text-sm">
               <Shield className="h-4 w-4 text-indigo-500" />
-              The Reputation Platform for Influencers
+              The Platform for Influencer Discovery
             </div>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
               Find Trustworthy{" "}
@@ -122,14 +125,10 @@ export default function HomePage() {
       {/* Stats */}
       <section className="border-b bg-muted/30">
         <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
             <div>
               <p className="text-3xl font-bold text-indigo-500">{stats.influencers}</p>
               <p className="text-sm text-muted-foreground">Influencers Reviewed</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-indigo-500">{stats.reviews}</p>
-              <p className="text-sm text-muted-foreground">Reviews Written</p>
             </div>
             <div>
               <p className="text-3xl font-bold text-indigo-500">{stats.categories}</p>
@@ -155,7 +154,7 @@ export default function HomePage() {
                 Trending Influencers
               </h2>
               <p className="text-muted-foreground mt-1">
-                Most reviewed influencers on Reputize
+                Most reviewed influencers on {SITE_NAME}
               </p>
             </div>
             <Button variant="ghost" onClick={() => router.push("/influencers")}>
@@ -176,16 +175,12 @@ export default function HomePage() {
                           {inf.category}
                         </Badge>
                       </div>
-                      {inf.profile_image_url && (
-                        <img
-                          src={inf.profile_image_url}
-                          alt={inf.name}
-                          className="w-12 h-12 rounded-full object-cover ml-3"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      )}
+<Avatar className="h-12 w-12 ml-3 border border-border">
+                          <AvatarImage src={inf.profile_image_url ?? undefined} alt={inf.name} />
+                          <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                            {getInitials(inf.name)}
+                          </AvatarFallback>
+                        </Avatar>
                     </div>
                     {inf.bio && (
                       <p className="text-sm text-muted-foreground line-clamp-2">

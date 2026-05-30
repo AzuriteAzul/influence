@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Star } from "lucide-react";
+import { Zap } from "lucide-react";
+import { SITE_NAME } from "@/lib/constants";
 import Link from "next/link";
 
 export function LoginForm() {
@@ -12,8 +13,9 @@ export function LoginForm() {
   const isSignup = searchParams.get("signup") === "true";
   const redirect = searchParams.get("redirect") ?? "/dashboard";
 
-  const [email, setEmail] = useState("");
+const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -25,7 +27,11 @@ export function LoginForm() {
     const supabase = createClient();
 
     if (isSignup) {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { username, display_name: username } },
+      });
       if (error) {
         setError(error.message);
         setLoading(false);
@@ -51,9 +57,9 @@ export function LoginForm() {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2">
-            <Star className="h-8 w-8 text-indigo-500 fill-indigo-500" />
+            <Zap className="h-8 w-8 text-indigo-500 fill-indigo-500" />
             <span className="text-2xl font-bold bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
-              Reputize
+              {SITE_NAME}
             </span>
           </div>
           <h1 className="text-xl font-semibold">
@@ -67,6 +73,25 @@ export function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {isSignup && (
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium mb-1">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
+                placeholder="Choose a username"
+                required
+                minLength={3}
+                maxLength={30}
+                className="w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
+              />
+            </div>
+          )}
+
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1">
               Email

@@ -15,6 +15,3 @@ export const reviewSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters").max(100),
   body: z.string().min(10, "Review must be at least 10 characters").max(2000),
 });
-
-export type InfluencerInput = z.infer<typeof influencerSchema>;
-export type ReviewInput = z.infer<typeof reviewSchema>;

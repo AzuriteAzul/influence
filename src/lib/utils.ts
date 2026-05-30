@@ -23,6 +23,14 @@ export function formatDate(date: string): string {
   }).format(new Date(date));
 }
 
+export function getInitials(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) return "?";
+  const words = trimmed.split(/\s+/);
+  if (words.length === 1) return words[0].charAt(0).toUpperCase();
+  return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+}
+
 export function formatRelativeDate(date: string): string {
   const now = Date.now();
   const then = new Date(date).getTime();

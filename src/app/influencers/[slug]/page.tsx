@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Star, Globe, ExternalLink } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import type { InfluencerWithStats } from "@/types";
 
@@ -84,13 +86,12 @@ export default function InfluencerProfilePage() {
     <div className="container mx-auto max-w-4xl px-4 py-12">
       {/* Hero section */}
       <div className="flex flex-col sm:flex-row gap-6 items-start mb-8">
-        {influencer.profile_image_url && (
-          <img
-            src={influencer.profile_image_url}
-            alt={influencer.name}
-            className="w-24 h-24 rounded-full object-cover border-4 border-background shadow-lg"
-          />
-        )}
+        <Avatar className="h-24 w-24 border-4 border-background shadow-lg">
+            <AvatarImage src={influencer.profile_image_url ?? undefined} alt={influencer.name} />
+            <AvatarFallback className="text-2xl font-semibold bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+              {getInitials(influencer.name)}
+            </AvatarFallback>
+          </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-bold">{influencer.name}</h1>

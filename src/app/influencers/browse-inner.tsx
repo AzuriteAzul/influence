@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Star, Search } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { getInitials } from "@/lib/utils";
 import type { Influencer, Category, PaginatedResponse, SortOption } from "@/types";
 
 export default function BrowsePageInner() {
@@ -177,16 +179,12 @@ export default function BrowsePageInner() {
                           {inf.category}
                         </Badge>
                       </div>
-                      {inf.profile_image_url && (
-                        <img
-                          src={inf.profile_image_url}
-                          alt={inf.name}
-                          className="w-12 h-12 rounded-full object-cover ml-3"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).style.display = "none";
-                          }}
-                        />
-                      )}
+<Avatar className="h-12 w-12 ml-3 border border-border">
+                          <AvatarImage src={inf.profile_image_url ?? undefined} alt={inf.name} />
+                          <AvatarFallback className="text-xs font-semibold bg-gradient-to-br from-indigo-500 to-violet-500 text-white">
+                            {getInitials(inf.name)}
+                          </AvatarFallback>
+                        </Avatar>
                     </div>
 
                     {inf.bio && (

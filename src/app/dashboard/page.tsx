@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Star, User, MessageSquare } from "lucide-react";
@@ -91,7 +91,10 @@ export default function DashboardPage() {
               </Button>
             </div>
           ) : (
-            reviews.map((review) => (
+            reviews.map((review) => {
+                const profile = review.profiles as { display_name?: string | null; username?: string | null; avatar_url?: string | null } | undefined;
+                const authorName = profile?.username || profile?.display_name || "Anonymous";
+                return (
               <Card key={review.id}>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-2">
@@ -108,9 +111,11 @@ export default function DashboardPage() {
                   </div>
                   <h4 className="font-medium">{review.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1">{review.body}</p>
+                  <p className="text-xs text-muted-foreground mt-2">by {authorName}</p>
                 </CardContent>
               </Card>
-            ))
+              );
+            })
           )}
         </TabsContent>
 
